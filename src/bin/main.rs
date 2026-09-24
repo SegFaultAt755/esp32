@@ -10,9 +10,10 @@
 use esp_backtrace as _;
 use esp_hal::clock::CpuClock;
 use esp_hal::main;
-use esp_hal::time::{Duration, Instant};
 
 extern crate alloc;
+mod boot;
+mod repeat;
 
 esp_bootloader_esp_idf::esp_app_desc!();
 
@@ -22,6 +23,16 @@ esp_bootloader_esp_idf::esp_app_desc!();
 )]
 #[main]
 fn main() -> ! {
+    init();
+    boot::boot();
+
+    loop {
+        repeat::repeat();
+    }
+}
+
+#[inline]
+fn init() {
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
@@ -35,9 +46,4 @@ fn main() -> ! {
     let _gpio20 = peripherals.GPIO20;
 
     esp_alloc::heap_allocator!(#[esp_hal::ram(reclaimed)] size: 98768);
-
-    loop {
-        let delay_start = Instant::now();
-        while delay_start.elapsed() < Duration::from_millis(500) {}
-    }
 }
